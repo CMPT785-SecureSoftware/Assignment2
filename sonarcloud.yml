@@ -1,0 +1,42 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install coverage pytest
+          pip install -r requirements.txt  # if you have a requirements file
+
+      - name: Run tests with coverage
+        run: |
+          coverage run -m pytest
+          coverage xml
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=YOUR_ORG_KEY                # e.g. "myorg"
+            -Dsonar.projectKey=YOUR_PROJECT_KEY              # e.g. "myorg_my-flask-app"
+            -Dsonar.projectName=YOUR_PROJECT_NAME            # e.g. "My Flask App"
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
