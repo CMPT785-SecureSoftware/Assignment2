@@ -1,0 +1,99 @@
+name: Manual Security Scan
+
+on:
+  workflow_dispatch:  # Allows manual execution
+
+jobs:
+  security_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    # 1️⃣ Install dependencies
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install bandit safety semgrep
+
+    # 2️⃣ Run Bandit (Python security analysis)
+    - name: Run Bandit
+      run: bandit -r . -o bandit_report.txt -f txt || true
+
+    # 3️⃣ Run Semgrep (Static analysis)
+    - name: Run Semgrep
+      run: semgrep scan --config=auto --json > semgrep_report.json || true
+
+    # 4️⃣ Run Safety (Python package vulnerability scanner)
+    - name: Run Safety
+      run: safety check --full-report > safety_report.txt || true
+
+    # 5️⃣ Run OWASP Dependency-Check (Find vulnerable dependencies)
+    - name: OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: "FlaskApp"
+        path: "."
+        format: "HTML"
+        out: "dependency-check-report"
+
+    # 6️⃣ Run Trivy (Filesystem & Docker scanning)
+    - name: Run Trivy on dependencies
+      run: trivy fs --format table --output trivy_dependencies.txt . || true
+
+    - name: Run Trivy on Docker image (if applicable)
+      run: |
+        docker build -t my-flask-app .
+        trivy image --format table --output trivy_docker.txt my-flask-app || true
+      if: ${{ hashFiles('Dockerfile') != '' }}
+
+    # 7️⃣ Run Snyk (Dependency vulnerabilities)
+    - name: Run Snyk
+      uses: snyk/actions/python@master
+      with:
+        args: --all-projects
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    # 8️⃣ Run Checkov (Terraform & Kubernetes security scanning)
+    - name: Run Checkov
+      run: checkov -d . > checkov_report.txt || true
+
+    # 9️⃣ Run GitLeaks (Secret detection)
+    - name: Run GitLeaks
+      run: gitleaks detect --report-format json --report-path gitleaks_report.json || true
+
+    # 1️⃣0️⃣ Run ZAP (Web security scan)
+    - name: Run OWASP ZAP
+      run: |
+        docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
+      continue-on-error: true
+
+    # 1️⃣1️⃣ Run Nikto (Web server security scanning)
+    - name: Run Nikto
+      run: nikto -h http://localhost:5000 -output nikto_report.txt || true
+      continue-on-error: true
+
+    # Upload Reports
+    - name: Upload Security Reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit_report.txt
+          semgrep_report.json
+          safety_report.txt
+          dependency-check-report
+          trivy_dependencies.txt
+          trivy_docker.txt
+          checkov_report.txt
+          gitleaks_report.json
+          zap_report.html
+          nikto_report.txt
