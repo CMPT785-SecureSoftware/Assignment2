@@ -19,10 +19,12 @@ import sqlite3
 import logging
 from utils.db_utils import DatabaseUtils
 from utils.file_storage import FileStorage
+import os
 
 app = Flask(__name__)
 
-SECRET_KEY = "secret_key"
+#SECRET_KEY = "secret_key"
+SECRET_KEY=os.getenv("SECRET_KEY")
 
 logging.basicConfig(level=logging.INFO)
 db = DatabaseUtils()
