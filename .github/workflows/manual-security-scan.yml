@@ -89,11 +89,21 @@ jobs:
     # 9️⃣ Run GitLeaks (Secret detection)
     - name: Run GitLeaks
       run: gitleaks detect --report-format json --report-path gitleaks_report.json || true
+    
+    # Start Flask server
+    - name: Install dependencies for Flask
+      run: pip install -r ./backend_service/requirements.txt
+    
+    - name: Start Flask Server
+      run: |
+        nohup python backend_service/app.py &
+        # Wait until the server is up
+        sleep 10
 
     # 1️⃣0️⃣ Run ZAP (Web security scan)
     - name: Run OWASP ZAP
       run: |
-        docker run -t owasp/zap2docker-weekly zap-baseline.py -t http://localhost:9090d -r zap_report.html || true
+        docker run -t owasp/zap2docker-weekly zap-baseline.py -t http://localhost:9090 -r zap_report.html || true
       continue-on-error: true
 
     # 1️⃣1️⃣ Run Nikto (Web server security scanning)
