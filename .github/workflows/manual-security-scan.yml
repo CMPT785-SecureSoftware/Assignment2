@@ -78,7 +78,7 @@ jobs:
 
     # 1️⃣1️⃣ Run Nikto (Web server security scanning)
     - name: Run Nikto
-      run: nikto -h http://localhost:5000 -output nikto_report.txt || true
+      run: nikto -h http://localhost:9090 -output nikto_report.txt || true
       continue-on-error: true
 
     # Upload Reports
@@ -97,3 +97,22 @@ jobs:
           gitleaks_report.json
           zap_report.html
           nikto_report.txt
+
+  codeql_scan:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
