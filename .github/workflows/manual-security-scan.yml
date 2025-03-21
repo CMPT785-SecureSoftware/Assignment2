@@ -60,6 +60,7 @@ jobs:
       with:
         args: --all-projects --command=monitor
       env:
+        DEBUG: "*"
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # 8️⃣ Run Checkov (Terraform & Kubernetes security scanning)
@@ -121,3 +122,41 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.analyze.outputs.sarif_file }}
+  
+  coverity_scan:
+    name: Coverity Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Coverity CLI
+        run: |
+          # Download the Coverity analysis tool tarball (using the open source URL)
+          curl -O https://scan.coverity.com/download/cov-analysis-linux64.tar.gz
+          tar -xzf cov-analysis-linux64.tar.gz
+          echo "$PWD/cov-analysis-linux64/bin" >> $GITHUB_PATH
+
+      - name: Run Coverity Build
+        run: |
+          mkdir cov-int
+          # For Python/Flask projects, install dependencies and compile Python files.
+          cov-build --dir cov-int bash -c "pip install -r ./backend_service/requirements.txt && python -m compileall ./backend_service"
+
+      - name: Create Coverity Archive
+        run: tar czvf coverity_scan.tgz cov-int
+
+      - name: Upload Coverity Results
+        env:
+          COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          COVERITY_SCAN_NOTIFICATION_EMAIL: ${{ secrets.COVERITY_SCAN_NOTIFICATION_EMAIL }}
+          COVERITY_SCAN_PROJECT_NAME: ${{ secrets.COVERITY_SCAN_PROJECT_NAME }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          curl --form token="$COVERITY_SCAN_TOKEN" \
+               --form email="$COVERITY_SCAN_NOTIFICATION_EMAIL" \
+               --form file=@coverity_scan.tgz \
+               --form version="$GITHUB_RUN_NUMBER" \
+               --form description="$GITHUB_COMMIT_MESSAGE" \
+               https://scan.coverity.com/builds?project="$COVERITY_SCAN_PROJECT_NAME"
