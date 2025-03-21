@@ -23,6 +23,25 @@ jobs:
         pip install -r ./backend_service/requirements.txt
         pip install bandit safety semgrep
 
+    - name: Install Additional Tools
+      run: |
+        echo "Installing Trivy..."
+        wget -q https://github.com/aquasecurity/trivy/releases/download/v0.44.0/trivy_0.44.0_Linux-64bit.deb
+        sudo dpkg -i trivy_0.44.0_Linux-64bit.deb
+        
+        echo "Installing Checkov..."
+        pip install --upgrade pip
+        pip install checkov
+        
+        echo "Installing Gitleaks..."
+        wget -q https://github.com/zricethezav/gitleaks/releases/download/v8.20.0/gitleaks_8.20.0_linux_x64.tar.gz
+        tar -xzf gitleaks_8.20.0_linux_x64.tar.gz
+        sudo mv gitleaks /usr/local/bin/
+        
+        echo "Installing Nikto..."
+        sudo apt-get update && sudo apt-get install -y nikto
+
+
     # 2️⃣ Run Bandit (Python security analysis)
     - name: Run Bandit
       run: bandit -r . -o bandit_report.txt -f txt || true
@@ -74,7 +93,7 @@ jobs:
     # 1️⃣0️⃣ Run ZAP (Web security scan)
     - name: Run OWASP ZAP
       run: |
-        docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
+        docker run -t owasp/zap2docker-weekly zap-baseline.py -t http://localhost:9090d -r zap_report.html || true
       continue-on-error: true
 
     # 1️⃣1️⃣ Run Nikto (Web server security scanning)
