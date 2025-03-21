@@ -109,6 +109,8 @@ jobs:
         target: 'http://localhost:9090'
         rules_file_name: '.zap/rules.tsv'
         cmd_options: '-a'
+        allow_issue_writing: false
+
 
     # 1️⃣1️⃣ Run Nikto (Web server security scanning)
     - name: Run Nikto
