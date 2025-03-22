@@ -1,8 +1,12 @@
 import requests
+import os
+
+# get token from env
+token = os.environ.get("TOKEN")
 
 url = "http://localhost:9090/file"
 cookies = {
-    'token': 'your_token_here',
+    'token': token,
     'admin': 'true'
 }
 
