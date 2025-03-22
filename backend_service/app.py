@@ -64,6 +64,7 @@ def login():
     username = request.json.get("username")
     password = request.json.get("password")
 
+    print(username, password)
     rows = db.fetch_data("SELECT * FROM users WHERE username=? AND password=?", (username, password))
 
     if len(rows) != 1:
