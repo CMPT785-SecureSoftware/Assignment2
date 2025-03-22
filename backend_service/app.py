@@ -21,6 +21,7 @@ import logging
 from utils.db_utils import DatabaseUtils
 from utils.file_storage import FileStorage
 import os
+import urllib.parse
 
 app = Flask(__name__)
 
@@ -103,8 +104,11 @@ def store_file():
         uploaded_files = request.files
         logging.error(uploaded_files)
         for f in uploaded_files:
-            fs.store(uploaded_files[f].name, uploaded_files[f].read())
-            logging.info(f'Uploaded filename: {uploaded_files[f].name}')
+            raw_filename = uploaded_files[f].filename
+            decoded_filename = urllib.parse.unquote(raw_filename)
+            safe_filename = decoded_filename.replace('\n', '').replace('\r', '')
+            fs.store(safe_filename, uploaded_files[f].read())
+            logging.info(f'Uploaded filename: {safe_filename}')
         return "Files uploaded successfully"
     elif request.method == 'DELETE':
         if not is_admin: return "Need admin access"
