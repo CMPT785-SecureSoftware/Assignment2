@@ -4,5 +4,3 @@ services:
     build: ./backend_service/.
     ports:
       - "9090:9090"
-    environment:
-      SECRET_KEY: ${SECRET_KEY}
