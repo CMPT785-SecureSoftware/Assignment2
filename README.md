@@ -18,3 +18,4 @@ Making changes and rebuilding the app : `docker compose build`
 * Cryptographic failures
 * Cookies
 * Anything else you may find ;)
+  
