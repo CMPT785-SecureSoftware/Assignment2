@@ -62,7 +62,7 @@ def login():
     username = request.json.get("username")
     password = request.json.get("password")
 
-    rows = db.fetch_data(f"SELECT * FROM users where username='{username}' AND password='{password}'")
+    rows = db.fetch_data(f"SELECT * FROM users where username=? AND password=?", (username, password))
 
     if len(rows) != 1:
         return "Invalid credentials"
