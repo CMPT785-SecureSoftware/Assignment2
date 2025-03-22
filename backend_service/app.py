@@ -25,8 +25,8 @@ import urllib.parse
 
 app = Flask(__name__)
 
-SECRET_KEY = "secret_key"
-#SECRET_KEY=os.getenv("SECRET_KEY")
+#SECRET_KEY = "secret_key"
+SECRET_KEY=os.getenv("SECRET_KEY")
 #logging.info(f"SECRET_KEY: {SECRET_KEY}")
 
 logging.basicConfig(level=logging.INFO)
