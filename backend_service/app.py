@@ -14,7 +14,8 @@ Research on common SQL and JWT issues and bypasses.
 
 from flask import Flask, request, make_response
 import jwt
-import pickle
+import base64
+import json
 import sqlite3
 import logging
 from utils.db_utils import DatabaseUtils
@@ -45,13 +46,14 @@ def _init_app():
 def _check_login():
     auth_token = request.cookies.get('token', None)
     if not auth_token:
-        raise "Missing token cookie"
+        raise ValueError("Missing token cookie")
     try:
         # Decode JWT token
         token = auth_token[len(auth_token)//2:] + auth_token[:len(auth_token)//2]
-        data = jwt.decode(pickle.loads(bytes.fromhex(token)), SECRET_KEY, algorithms=["HS256"])
-    except jwt.DecodeError:
-        raise "Token is invalid"
+        decoded_token = base64.urlsafe_b64decode(token.encode()).decode()
+        data = jwt.decode(json.loads(decoded_token), SECRET_KEY, algorithms=["HS256"])
+    except jwt.exceptions.DecodeError:
+        raise ValueError("Token is invalid")
     return data
 
 
@@ -66,9 +68,9 @@ def login():
         return "Invalid credentials"
     
     token = jwt.encode({ "username": username }, SECRET_KEY, algorithm="HS256")
-    obfuscate1 = pickle.dumps(token.encode())
-    obfuscate2 = obfuscate1.hex()
-    obfuscate3 = obfuscate2[len(obfuscate2)//2:] + obfuscate2[:len(obfuscate2)//2]
+    encoded_token = json.dumps(token).encode()
+    obfuscate1 = base64.urlsafe_b64encode(encoded_token).decode()
+    obfuscate3 = obfuscate1[len(obfuscate1)//2:] + obfuscate1[:len(obfuscate1)//2]
     # Everyone knows how to read JWT tokens these days. The team decided to obfuscate it as a pickle and
     # some fancy tricks so nobody can tell we're using JWT and can't exploit us using common JWT exploits :D
     # Devs knowing some security sure is useful! :P
