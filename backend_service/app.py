@@ -52,7 +52,7 @@ def _check_login():
         raise "Token is invalid"
     return data
 
- 
+
 @app.route("/login", methods=["POST"])
 def login():
     username = request.json.get("username")
@@ -99,8 +99,8 @@ def store_file():
         uploaded_files = request.files
         logging.error(uploaded_files)
         for f in uploaded_files:
-            fs.store(uploaded_files[f].filename, uploaded_files[f].read())
-            logging.info(f'Uploaded filename: {uploaded_files[f].filename}')
+            fs.store(uploaded_files[f].name, uploaded_files[f].read())
+            logging.info(f'Uploaded filename: {uploaded_files[f].name}')
         return "Files uploaded successfully"
     elif request.method == 'DELETE':
         if not is_admin: return "Need admin access"
