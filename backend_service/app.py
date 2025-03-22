@@ -99,8 +99,8 @@ def store_file():
         uploaded_files = request.files
         logging.error(uploaded_files)
         for f in uploaded_files:
-            fs.store(uploaded_files[f].name, uploaded_files[f].read())
-            logging.info(f'Uploaded filename: {uploaded_files[f].name}')
+            fs.store(uploaded_files[f].filename, uploaded_files[f].read())
+            logging.info(f'Uploaded filename: {uploaded_files[f].filename}')
         return "Files uploaded successfully"
     elif request.method == 'DELETE':
         if not is_admin: return "Need admin access"
