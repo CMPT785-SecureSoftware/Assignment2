@@ -96,7 +96,18 @@ def store_file():
     except:
         return "Not logged in"
 
-    is_admin = True if request.cookies.get('admin', 'false')=='true' else False
+    # Fetch username from verified JWT token data
+    username = data.get("username")
+
+    # Verify privilege directly from the database
+    rows = db.fetch_data("SELECT privilege FROM users WHERE username=?", (username,))
+
+    # checking both db and cookie for admin status
+    db_is_admin = rows and rows[0][0] == 1
+    cookie_is_admin = request.cookies.get('admin', 'false') == 'true'
+
+    is_admin = db_is_admin and cookie_is_admin
+
 
     if request.method == 'GET':
         filename = request.args.get('filename')
