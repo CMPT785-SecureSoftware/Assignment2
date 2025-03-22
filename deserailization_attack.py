@@ -1,7 +1,4 @@
 import pickle
-import base64
-import os
-import requests
 
 class PickleRce(object):
     def _reduce_(self):
