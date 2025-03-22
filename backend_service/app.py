@@ -52,7 +52,7 @@ def _check_login():
         raise "Token is invalid"
     return data
 
-
+ 
 @app.route("/login", methods=["POST"])
 def login():
     username = request.json.get("username")
