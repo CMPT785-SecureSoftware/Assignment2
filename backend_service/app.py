@@ -22,6 +22,8 @@ from utils.db_utils import DatabaseUtils
 from utils.file_storage import FileStorage
 import os
 import urllib.parse
+import datetime
+from datetime import UTC
 
 app = Flask(__name__)
 
@@ -70,7 +72,7 @@ def login():
     if len(rows) != 1:
         return "Invalid credentials"
     
-    token = jwt.encode({ "username": username }, SECRET_KEY, algorithm="HS256")
+    token = jwt.encode({ "username": username, "iat": datetime.datetime.now(UTC), "exp": datetime.datetime.now(UTC) + datetime.timedelta(hours=1) }, SECRET_KEY, algorithm="HS256")
     encoded_token = json.dumps(token).encode()
     obfuscate1 = base64.urlsafe_b64encode(encoded_token).decode()
     obfuscate3 = obfuscate1[len(obfuscate1)//2:] + obfuscate1[:len(obfuscate1)//2]
