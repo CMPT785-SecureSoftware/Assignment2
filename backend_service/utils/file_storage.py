@@ -14,17 +14,24 @@ class FileStorage(Storage):
             pass
     
     def store(self, filename, contents):
-        with open(self.storage_directory + '/' + filename, 'wb') as fp:
+        safe_filename = os.path.basename(filename)
+        with open(os.path.join(self.storage_directory, safe_filename), 'wb') as fp:
             fp.write(contents)
     
     def get(self, filename):
-        with open(self.storage_directory + '/' + filename, 'rb') as fp:
+        safe_filename = os.path.basename(filename)
+        filepath = os.path.join(self.storage_directory, safe_filename)
+        if not os.path.exists(filepath):
+            return None
+        with open(filepath, 'rb') as fp:
             contents = fp.read()
         return contents
     
     def delete(self, filename):
+        safe_filename = os.path.basename(filename)
+        filepath = os.path.join(self.storage_directory, safe_filename)
         try:
-            os.remove(self.storage_directory + '/' + filename)
+            os.remove(filepath)
             return 0
         except Exception as ex:
             return -1
