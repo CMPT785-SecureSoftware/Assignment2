@@ -27,7 +27,7 @@ app = Flask(__name__)
 
 #SECRET_KEY = "secret_key"
 SECRET_KEY=os.getenv("SECRET_KEY")
-print(SECRET_KEY)
+logging.info(f"SECRET_KEY: {SECRET_KEY}")
 
 logging.basicConfig(level=logging.INFO)
 db = DatabaseUtils()
@@ -64,7 +64,7 @@ def login():
     username = request.json.get("username")
     password = request.json.get("password")
 
-    print(username, password)
+    logging.info(f"username: {username}, password: {password}")
     rows = db.fetch_data("SELECT * FROM users WHERE username=? AND password=?", (username, password))
 
     if len(rows) != 1:
