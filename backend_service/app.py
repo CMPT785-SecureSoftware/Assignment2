@@ -35,6 +35,11 @@ logging.basicConfig(level=logging.INFO)
 db = DatabaseUtils()
 fs = FileStorage()
 
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def _init_app():
     db.update_data("DROP TABLE IF EXISTS users;")
     db.update_data('''CREATE TABLE IF NOT EXISTS users (
@@ -70,7 +75,7 @@ def login():
     rows = db.fetch_data("SELECT * FROM users WHERE username=? AND password=?", (username, password))
 
     if len(rows) != 1:
-        return "Invalid credentials"
+        return "Invalid credentials", 401
     
     token = jwt.encode({ "username": username, "iat": datetime.datetime.now(UTC), "exp": datetime.datetime.now(UTC) + datetime.timedelta(hours=1) }, SECRET_KEY, algorithm="HS256")
     encoded_token = json.dumps(token).encode()
@@ -96,7 +101,7 @@ def store_file():
     try:
         data = _check_login()
     except:
-        return "Not logged in"
+        return "Not logged in", 401
 
     # Fetch username from verified JWT token data
     username = data.get("username")
@@ -115,23 +120,28 @@ def store_file():
         filename = request.args.get('filename')
         return fs.get(filename)
     elif request.method == 'POST':
-        if not is_admin: return "Need admin access"
+        if not is_admin: return "Need admin access", 403
         uploaded_files = request.files
         logging.error(uploaded_files)
         for f in uploaded_files:
             raw_filename = uploaded_files[f].filename
             decoded_filename = urllib.parse.unquote(raw_filename)
             safe_filename = decoded_filename.replace('\n', '').replace('\r', '')
+            if not allowed_file(safe_filename):
+                return "Invalid file type, only 'jpeg, jpg, png, pdf, gif, txt' are allowed", 400
+            
             fs.store(safe_filename, uploaded_files[f].read())
             logging.info(f'Uploaded filename: {safe_filename}')
         return "Files uploaded successfully"
     elif request.method == 'DELETE':
-        if not is_admin: return "Need admin access"
+        if not is_admin: return "Need admin access", 403
         filename = request.args.get('filename')
-        fs.delete(filename)
-        return f"{filename} deleted successfully"
+        if fs.delete(filename):
+            return f"{filename} deleted successfully", 200
+        else:
+            return f"{filename} not found", 404
     else:
-        return "Method not implemented"
+        return "Method not implemented", 405
 
 
 if __name__ == "__main__":
