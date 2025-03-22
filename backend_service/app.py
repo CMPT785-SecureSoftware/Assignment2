@@ -24,6 +24,7 @@ import os
 import urllib.parse
 import datetime
 from datetime import UTC
+import html
 
 app = Flask(__name__)
 
@@ -136,10 +137,11 @@ def store_file():
     elif request.method == 'DELETE':
         if not is_admin: return "Need admin access", 403
         filename = request.args.get('filename')
-        if fs.delete(filename):
-            return f"{filename} deleted successfully", 200
+        sanitized_filename = html.escape(filename)  # Escapes HTML characters
+        if fs.delete(sanitized_filename):
+            return f"{sanitized_filename} deleted successfully", 200
         else:
-            return f"{filename} not found", 404
+            return f"{sanitized_filename} not found", 404
     else:
         return "Method not implemented", 405
 
